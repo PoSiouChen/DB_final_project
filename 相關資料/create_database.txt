@@ -1,0 +1,65 @@
+mysql -u root -p
+CREATE DATABASE database_final_project;
+USE database_final_project;
+
+Database Table=====================================================
+
+CREATE TABLE student ( 
+    student_ID VARCHAR(255) NOT NULL, 
+    name VARCHAR(255) NOT NULL, 
+    PRIMARY KEY (student_ID) 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `course` (
+  `course_ID` varchar(255) NOT NULL,
+  `course_name` varchar(255) NOT NULL,
+  `dept_name` varchar(255) NOT NULL,
+  `credit` int(11) NOT NULL,
+  `required` tinyint(1) DEFAULT NULL,
+  `core` tinyint(1) DEFAULT NULL,
+  `field` enum('人格','民主','全球','歷史','美學','科技','自然','經典') DEFAULT NULL
+  PRIMARY KEY (course_ID) 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+CREATE TABLE `my_course` ( 
+  `student_ID` VARCHAR(255) NOT NULL, 
+  `course_ID` VARCHAR(255) NOT NULL, 
+  PRIMARY KEY (`student_ID`, `course_ID`), 
+  FOREIGN KEY (`student_ID`) REFERENCES `student`(`student_ID`), 
+  FOREIGN KEY (`course_ID`) REFERENCES `course`(`course_ID`) 
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+Procedure========================================================
+
+DELIMITER //
+CREATE PROCEDURE add_multiple_courses(
+    IN studentID VARCHAR(20),
+    IN courses TEXT
+)
+BEGIN
+    DECLARE courseID VARCHAR(20);
+    DECLARE cur_pos INT DEFAULT 1;
+    DECLARE delimiter_pos INT;
+
+    CREATE TEMPORARY TABLE temp_courses (course_ID VARCHAR(20));
+
+    WHILE cur_pos <= LENGTH(courses) DO
+        SET delimiter_pos = LOCATE(',', courses, cur_pos);
+        IF delimiter_pos = 0 THEN
+            SET delimiter_pos = LENGTH(courses) + 1;
+        END IF;
+
+        SET courseID = TRIM(SUBSTRING(courses, cur_pos, delimiter_pos - cur_pos));
+        INSERT INTO temp_courses (course_ID) VALUES (courseID);
+
+        SET cur_pos = delimiter_pos + 1;
+    END WHILE;
+
+    INSERT INTO my_course (student_ID, course_ID)
+    SELECT studentID, course_ID
+    FROM temp_courses
+    WHERE course_ID IN (SELECT course_ID FROM course);
+
+    DROP TEMPORARY TABLE temp_courses;
+END //
+DELIMITER ;

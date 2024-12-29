@@ -68,7 +68,7 @@
                 <ul>
                     <li class="nav-item"><a class="nav-link" href="search.php">課程查詢</a></li>
                     <li class="nav-item"><a class="nav-link" href="courseTaken.php">學生已修課列表</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">計算學分</a></li>
+                    <li class="nav-item"><a class="nav-link" href="count.php">計算學分</a></li>
                     <li class="nav-item"><a class="nav-link" href="graduation.php">畢業門檻</a></li>
                 </ul>
                 <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -76,8 +76,9 @@
             <!-- <a class="btn-getstarted" href="login.php">登入系統</a> -->
         </div>
     </header>
-
-    <div style="padding-top: 160px;">
+    
+    <section class="hero">
+    <div>
     <div class="container">
         <h1>畢業學分檢核標準(111年度資工系入學學生)</h1>
         
@@ -294,5 +295,6 @@
         </ul>
     </div>
     <div>
+    </section>
 </body>
 </html>

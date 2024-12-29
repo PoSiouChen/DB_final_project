@@ -62,7 +62,7 @@ if (isset($_POST['logout'])) {
             <ul>
                 <li class="nav-item"><a class="nav-link" href="search.php">課程查詢</a></li>
                 <li class="nav-item"><a class="nav-link" href="courseTaken.php">學生已修課列表</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">計算學分</a></li>
+                <li class="nav-item"><a class="nav-link" href="count.php">計算學分</a></li>
                 <li class="nav-item"><a class="nav-link" href="graduation.php">畢業門檻</a></li>
             </ul>
             <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -95,19 +95,19 @@ if (isset($_POST['logout'])) {
     // 根據按鈕選擇顯示對應的輸入框
     if ($action == 'add') {
         echo '<div class="card mt-4">
-                <div class="card-header">
-                    新增課程
-                </div>
-                <div class="card-body">
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label for="course_ID" class="form-label">課號:</label>
-                            <input type="text" name="course_ID" class="form-control" placeholder="請輸入課號" required>
-                        </div>
-                        <button type="submit" name="action" value="add" class="btn btn-success">新增</button>
-                    </form>
-                </div>
-            </div>';
+            <div class="card-header">
+                批量新增課程
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="course_ID" class="form-label">課號 (多個課程用逗號分隔):</label>
+                        <input type="text" name="course_ID" class="form-control" placeholder="請輸入課號，例如: B01022H0,C02033A" required>
+                    </div>
+                    <button type="submit" name="action" value="add" class="btn btn-success">新增</button>
+                </form>
+            </div>
+        </div>';
     } elseif ($action == 'delete') {
         echo '<div class="card mt-4">
                 <div class="card-header">
@@ -143,28 +143,34 @@ if (isset($_POST['logout'])) {
                 </div>
             </div>';
     }
-
+  
+    
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // 新增課程
         if ($action == 'add' && isset($_POST['course_ID'])) {
-            $course_ID = $_POST['course_ID'];
-    
-            // 檢查課程是否存在
-            $course_query = "SELECT * FROM course WHERE course_ID = '$course_ID'";
-            $course_result = mysqli_query($conn, $course_query);
-    
-            if (mysqli_num_rows($course_result) > 0) {
-                // 新增課程
-                $insert_query = "INSERT INTO my_course (student_ID, course_ID) VALUES ('$student_ID', '$course_ID')";
-                if (mysqli_query($conn, $insert_query)) {
-                    echo "<div class='alert alert-success mt-3'>課程新增成功!</div>";
+            $course_IDs = explode(',', $_POST['course_ID']); // 接收課程 ID 並分割成陣列
+        
+            foreach ($course_IDs as $course_ID) {
+                $course_ID = trim($course_ID);
+        
+                // 檢查是否已存在記錄
+                $check_query = "SELECT * FROM my_course WHERE student_ID = '$student_ID' AND course_ID = '$course_ID'";
+                $check_result = mysqli_query($conn, $check_query);
+        
+                if (mysqli_num_rows($check_result) == 0) {
+                    // 調用儲存過程，新增記錄
+                    $call_query = "CALL add_multiple_courses('$student_ID', '$course_ID')";
+                    if (mysqli_query($conn, $call_query)) {
+                        echo "<div class='alert alert-success mt-3'>成功新增課程：$course_ID</div>";
+                    } else {
+                        echo "<div class='alert alert-danger mt-3'>新增課程失敗：$course_ID</div>";
+                    }
                 } else {
-                    echo "<div class='alert alert-danger mt-3'>新增課程失敗: " . mysqli_error($conn) . "</div>";
+                    echo "<div class='alert alert-warning mt-3'>課程已存在：$course_ID</div>";
                 }
-            } else {
-                echo "<div class='alert alert-warning mt-3'>課程不存在!</div>";
             }
-        }
+        }  
+        
     
         // 刪除課程
         if ($action == 'delete' && isset($_POST['course_ID'])) {
@@ -226,8 +232,6 @@ if (isset($_POST['logout'])) {
                   WHERE mc.student_ID = '$student_ID'";
         $result = mysqli_query($conn, $query);
     }
-    
-    
     
     ?>
     <br><hr>

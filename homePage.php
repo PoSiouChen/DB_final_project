@@ -27,7 +27,7 @@ session_start(); // 啟動 session，方便管理登入狀態
             <ul>
                 <li class="nav-item"><a class="nav-link" href="search.php">課程查詢</a></li>
                 <li class="nav-item"><a class="nav-link" href="courseTaken.php">學生已修課列表</a></li>
-                <li class="nav-item"><a class="nav-link" href="#">計算學分</a></li>
+                <li class="nav-item"><a class="nav-link" href="count.php">計算學分</a></li>
                 <li class="nav-item"><a class="nav-link" href="graduation.php">畢業門檻</a></li>
             </ul>
             <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>

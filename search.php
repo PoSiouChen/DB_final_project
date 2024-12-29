@@ -119,7 +119,7 @@ if (!empty($sql)) {
                 <ul>
                     <li class="nav-item"><a class="nav-link" href="search.php">課程查詢</a></li>
                     <li class="nav-item"><a class="nav-link" href="courseTaken.php">學生已修課列表</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">計算學分</a></li>
+                    <li class="nav-item"><a class="nav-link" href="count.php">計算學分</a></li>
                     <li class="nav-item"><a class="nav-link" href="graduation.php">畢業門檻</a></li>
                 </ul>
                 <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -127,7 +127,9 @@ if (!empty($sql)) {
             <!-- <a class="btn-getstarted" href="login.php">登入系統</a> -->
         </div>
     </header>
-    <div style="padding-top: 160px;">
+
+    <section class="hero">
+    <div >
     <h1>課程查詢系統</h1>
     <form method="post" action="">
         <label for="course_ID">課號:</label>
@@ -168,8 +170,8 @@ if (!empty($sql)) {
             <option value="校際選課（臺北聯合大學系統）">校際選課（臺北聯合大學系統）</option>
         </select>
         <button type="submit" name="search_by_dept_name">查詢系所</button>
+        
     </form>
-
     <?php if ($result && $result->num_rows > 0): ?>
         <table>
             <tr>
@@ -188,6 +190,8 @@ if (!empty($sql)) {
     <?php elseif ($_SERVER['REQUEST_METHOD'] == 'POST'): ?>
         <p>無符合的資料。</p>
     <?php endif; ?>
+    <br><br><br><br><br><br><br>
     <div>
+    </section>
 </body>
 </html>

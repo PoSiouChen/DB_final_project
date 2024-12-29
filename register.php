@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <ul>
                     <li class="nav-item"><a class="nav-link" href="search.php">課程查詢</a></li>
                     <li class="nav-item"><a class="nav-link" href="courseTaken.php">學生已修課列表</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">計算學分</a></li>
+                    <li class="nav-item"><a class="nav-link" href="count.php">計算學分</a></li>
                     <li class="nav-item"><a class="nav-link" href="graduation.php">畢業門檻</a></li>
                 </ul>
                 <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
@@ -85,6 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
             </div>
         </div>
+        <br><br><br><br><br><br><br> 
     </section>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
