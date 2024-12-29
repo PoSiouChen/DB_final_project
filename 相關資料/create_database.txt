@@ -29,9 +29,24 @@ CREATE TABLE `my_course` (
   FOREIGN KEY (`course_ID`) REFERENCES `course`(`course_ID`) 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+Function========================================================
+
+CREATE FUNCTION is_valid_course(courseID VARCHAR(20))
+RETURNS BOOLEAN
+DETERMINISTIC
+BEGIN
+    DECLARE course_count INT;
+    
+    -- 檢查課號是否存在於 course 
+    SELECT COUNT(*) INTO course_count
+    FROM course
+    WHERE course_ID = courseID;
+
+    RETURN course_count > 0; -- 如果存在則回傳 TRUE，否則回傳 FALSE
+END
+
 Procedure========================================================
 
-DELIMITER //
 CREATE PROCEDURE add_multiple_courses(
     IN studentID VARCHAR(20),
     IN courses TEXT
@@ -40,9 +55,12 @@ BEGIN
     DECLARE courseID VARCHAR(20);
     DECLARE cur_pos INT DEFAULT 1;
     DECLARE delimiter_pos INT;
+    DECLARE invalid_courses TEXT DEFAULT ''; -- 用來記錄無效課號
+    DECLARE has_invalid_courses BOOLEAN DEFAULT FALSE;
 
     CREATE TEMPORARY TABLE temp_courses (course_ID VARCHAR(20));
 
+    -- 將課號分割並處理
     WHILE cur_pos <= LENGTH(courses) DO
         SET delimiter_pos = LOCATE(',', courses, cur_pos);
         IF delimiter_pos = 0 THEN
@@ -50,16 +68,28 @@ BEGIN
         END IF;
 
         SET courseID = TRIM(SUBSTRING(courses, cur_pos, delimiter_pos - cur_pos));
-        INSERT INTO temp_courses (course_ID) VALUES (courseID);
+
+        -- 使用 FUNCTION 檢查課號是否有效
+        IF is_valid_course(courseID) THEN
+            INSERT INTO temp_courses (course_ID) VALUES (courseID);
+        ELSE
+            SET has_invalid_courses = TRUE;
+            SET invalid_courses = CONCAT_WS(',', invalid_courses, courseID); -- 累加無效課號
+        END IF;
 
         SET cur_pos = delimiter_pos + 1;
     END WHILE;
 
+    -- 如果有無效課號，拋出錯誤訊息
+    IF has_invalid_courses THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = CONCAT('無效的課號：', invalid_courses);
+    END IF;
+
+    -- 插入有效的課程到 my_course
     INSERT INTO my_course (student_ID, course_ID)
     SELECT studentID, course_ID
-    FROM temp_courses
-    WHERE course_ID IN (SELECT course_ID FROM course);
+    FROM temp_courses;
 
     DROP TEMPORARY TABLE temp_courses;
-END //
-DELIMITER ;
+END

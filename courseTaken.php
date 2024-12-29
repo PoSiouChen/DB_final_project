@@ -148,30 +148,21 @@ if (isset($_POST['logout'])) {
     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // 新增課程
         if ($action == 'add' && isset($_POST['course_ID'])) {
-            $course_IDs = explode(',', $_POST['course_ID']); // 接收課程 ID 並分割成陣列
+            $course_IDs = $_POST['course_ID']; // 保留原本的逗號分隔字串
         
-            foreach ($course_IDs as $course_ID) {
-                $course_ID = trim($course_ID);
-        
-                // 檢查是否已存在記錄
-                $check_query = "SELECT * FROM my_course WHERE student_ID = '$student_ID' AND course_ID = '$course_ID'";
-                $check_result = mysqli_query($conn, $check_query);
-        
-                if (mysqli_num_rows($check_result) == 0) {
-                    // 調用儲存過程，新增記錄
-                    $call_query = "CALL add_multiple_courses('$student_ID', '$course_ID')";
-                    if (mysqli_query($conn, $call_query)) {
-                        echo "<div class='alert alert-success mt-3'>成功新增課程：$course_ID</div>";
-                    } else {
-                        echo "<div class='alert alert-danger mt-3'>新增課程失敗：$course_ID</div>";
-                    }
-                } else {
-                    echo "<div class='alert alert-warning mt-3'>課程已存在：$course_ID</div>";
+            try {
+                $call_query = "CALL add_multiple_courses('$student_ID', '$course_IDs')"; // 將整個課程 ID 字串傳入
+                if (!mysqli_query($conn, $call_query)) {
+                    throw new Exception("新增課程失敗，原因：" . mysqli_error($conn));
                 }
-            }
-        }  
         
-    
+                // 若無錯誤則顯示成功訊息
+                echo "<div class='alert alert-success mt-3'>成功新增課程：$course_IDs</div>";
+            } catch (Exception $e) {
+                echo "<div class='alert alert-danger mt-3'>新增課程失敗：" . $e->getMessage() . "</div>";
+            }
+        }
+        
         // 刪除課程
         if ($action == 'delete' && isset($_POST['course_ID'])) {
             $course_ID = $_POST['course_ID'];
@@ -181,8 +172,7 @@ if (isset($_POST['logout'])) {
             $check_result = mysqli_query($conn, $check_query);
     
             if (mysqli_num_rows($check_result) == 0) {
-                // 如果沒有結果，表示該學生沒有這門課
-                echo "<div class='alert alert-warning mt-3'>學生沒有此課程!</div>";
+                echo "<div class='alert alert-warning mt-3'>學生沒有此課程!</div>"; // 如果沒有結果，表示該學生沒有這門課
             } else {
                 // 若有結果，執行刪除
                 $delete_query = "DELETE FROM my_course WHERE student_ID = '$student_ID' AND course_ID = '$course_ID'";
@@ -198,21 +188,20 @@ if (isset($_POST['logout'])) {
         if ($action == 'modify' && isset($_POST['old_course_ID']) && isset($_POST['new_course_ID'])) {
             $old_course_ID = $_POST['old_course_ID'];
             $new_course_ID = $_POST['new_course_ID'];
-    
+        
             // 檢查原課程是否存在於學生的課程清單中
             $check_old_course_query = "SELECT * FROM my_course WHERE student_ID = '$student_ID' AND course_ID = '$old_course_ID'";
             $check_old_course_result = mysqli_query($conn, $check_old_course_query);
-    
+        
             if (mysqli_num_rows($check_old_course_result) == 0) {
                 // 如果原課程不在學生的清單中
-                echo "<div class='alert alert-warning mt-3'>學生沒有選擇此課程!</div>";
+                echo "<div class='alert alert-danger mt-3'>學生沒有選擇此課程!</div>";
             } else {
-                // 檢查新課程是否存在
-                $course_query = "SELECT * FROM course WHERE course_ID = '$new_course_ID'";
-                $course_result = mysqli_query($conn, $course_query);
-    
-                if (mysqli_num_rows($course_result) > 0) {
-                    // 更新課程
+                $valid_course_query = "SELECT is_valid_course('$new_course_ID') AS valid"; // 使用 is_valid_course 函數來檢查新課程是否有效
+                $valid_course_result = mysqli_query($conn, $valid_course_query);
+                $valid_course_row = mysqli_fetch_assoc($valid_course_result);
+        
+                if ($valid_course_row['valid']) {
                     $update_query = "UPDATE my_course SET course_ID = '$new_course_ID' WHERE student_ID = '$student_ID' AND course_ID = '$old_course_ID'";
                     if (mysqli_query($conn, $update_query)) {
                         echo "<div class='alert alert-success mt-3'>課程修改成功!</div>";
@@ -220,10 +209,11 @@ if (isset($_POST['logout'])) {
                         echo "<div class='alert alert-danger mt-3'>修改課程失敗: " . mysqli_error($conn) . "</div>";
                     }
                 } else {
-                    echo "<div class='alert alert-warning mt-3'>新課程不存在!</div>";
+                    echo "<div class='alert alert-danger mt-3'>新課程不存在</div>";
                 }
             }
         }
+        
     
         // 重新查詢最新課程列表
         $query = "SELECT c.course_ID, c.course_name, c.dept_name 
