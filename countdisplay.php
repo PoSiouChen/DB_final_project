@@ -266,14 +266,14 @@
 	if ($data['total_sports_courses'] < 4) {
 		echo "<div class='alert alert-danger mt-3'>無法畢業：體育課程少於4堂。</div>";
 	}
-	else if ($data['total_credits'] < 135) {
+	if ($data['total_credits'] < 135) {
 		echo "<div class='alert alert-danger mt-3'>無法畢業：總學分少於135學分。</div>";
 	}
-	else if ($data['total_core_credits'] < 12){
+	if ($data['total_core_credits'] < 12){
 		echo "<div class='alert alert-danger mt-3'>無法畢業：核心選修學分少於12學分。</div>";
 	}
-	else{
-		echo "<p class='success'>恭喜畢業!!!</p>";
+	if ($data['total_sports_courses'] >= 4 && $data['total_credits'] >= 135 && $data['total_core_credits'] >= 12){
+		echo "<div class='alert alert-success mt-3'>恭喜畢業!!!</p>";
 	}
 	?>
 </div>
