@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- 主機： 127.0.0.1
--- 產生時間： 2024-12-27 01:55:42
+-- 產生時間： 2025-01-09 11:15:10
 -- 伺服器版本： 10.4.28-MariaDB
 -- PHP 版本： 8.2.4
 
@@ -20,6 +20,63 @@ SET time_zone = "+00:00";
 --
 -- 資料庫： `database_final_project`
 --
+
+DELIMITER $$
+--
+-- 程序
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `add_multiple_courses` (IN `studentID` VARCHAR(20), IN `courses` TEXT)   BEGIN
+    DECLARE courseID VARCHAR(20);
+    DECLARE cur_pos INT DEFAULT 1;
+    DECLARE delimiter_pos INT;
+    DECLARE error_message VARCHAR(255);  
+
+    CREATE TEMPORARY TABLE temp_courses (course_ID VARCHAR(20));
+
+    WHILE cur_pos <= LENGTH(courses) DO
+        SET delimiter_pos = LOCATE(',', courses, cur_pos);
+        IF delimiter_pos = 0 THEN
+            SET delimiter_pos = LENGTH(courses) + 1;
+        END IF;
+
+        SET courseID = TRIM(SUBSTRING(courses, cur_pos, delimiter_pos - cur_pos));
+
+        
+        IF is_valid_course(courseID) THEN
+            INSERT INTO temp_courses (course_ID) VALUES (courseID);
+        ELSE
+            
+            SET error_message = CONCAT('Invalid course ID: ', courseID);
+            
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = error_message;
+        END IF;
+
+        SET cur_pos = delimiter_pos + 1;
+    END WHILE;
+
+    
+    INSERT INTO my_course (student_ID, course_ID)
+    SELECT studentID, course_ID
+    FROM temp_courses;
+
+    DROP TEMPORARY TABLE temp_courses;
+END$$
+
+--
+-- 函式
+--
+CREATE DEFINER=`root`@`localhost` FUNCTION `is_valid_course` (`courseID` VARCHAR(20)) RETURNS TINYINT(1) DETERMINISTIC BEGIN
+    DECLARE course_count INT;
+    
+    
+    SELECT COUNT(*) INTO course_count
+    FROM course
+    WHERE course_ID = courseID;
+
+    RETURN course_count > 0; 
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -2237,6 +2294,95 @@ INSERT INTO `course` (`course_ID`, `course_name`, `dept_name`, `credit`, `requir
 ('B9N01ZKP', '中華文化巡禮', '共同教育中心華語中心', 2, NULL, NULL, NULL),
 ('B9N01ZLH', '華人社會與跨文化溝通', '共同教育中心華語中心', 2, NULL, NULL, NULL);
 
+-- --------------------------------------------------------
+
+--
+-- 資料表結構 `my_course`
+--
+
+CREATE TABLE `my_course` (
+  `student_ID` varchar(255) NOT NULL,
+  `course_ID` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+--
+-- 傾印資料表的資料 `my_course`
+--
+
+INSERT INTO `my_course` (`student_ID`, `course_ID`) VALUES
+('01157006', 'B0102D34'),
+('01157006', 'B57013AU'),
+('01157006', 'B9M012UX'),
+('01157006', 'B9M014TB'),
+('01157021', 'B01032YY'),
+('01157021', 'B57011RS'),
+('01157021', 'B5701M33'),
+('01157021', 'B5701M3J'),
+('01157021', 'B5701R9E'),
+('01157021', 'B5701R9F'),
+('01157021', 'B5701S60'),
+('01157021', 'B5701V75'),
+('01157021', 'B5702009'),
+('01157021', 'B570218K'),
+('01157021', 'B570234X'),
+('01157021', 'B5702988'),
+('01157021', 'B5702N57'),
+('01157021', 'B5702P36'),
+('01157021', 'B5702T0E'),
+('01157021', 'B5703021'),
+('01157021', 'B57030UG'),
+('01157021', 'B5703660'),
+('01157021', 'B57040UF'),
+('01157021', 'B5704N59'),
+('01157021', 'B5711M97'),
+('01157021', 'B5721M97'),
+('01157021', 'B6803DBM'),
+('01157021', 'B6A0422C'),
+('01157021', 'B6D03672'),
+('01157021', 'B6D03V47'),
+('01157021', 'B7102V3K'),
+('01157021', 'B71030EN'),
+('01157021', 'B71031KH'),
+('01157021', 'B7103N2Q'),
+('01157021', 'B71041R2'),
+('01157021', 'B92A116S'),
+('01157021', 'B92A11IZ'),
+('01157021', 'B92A11ZP'),
+('01157021', 'B92A13KJ'),
+('01157021', 'B9D01968'),
+('01157021', 'B9D01969'),
+('01157021', 'B9D023L3'),
+('01157021', 'B9K014DF'),
+('01157021', 'B9K014HC'),
+('01157021', 'B9M01024'),
+('01157021', 'B9M012R6'),
+('01157021', 'B9M012UX'),
+('01157021', 'B9M01350'),
+('01157021', 'B9M013A2'),
+('01157021', 'B9M013H0'),
+('01157021', 'B9M013XF'),
+('01157021', 'B9M013XG'),
+('01157021', 'B9M01Z64');
+
+-- --------------------------------------------------------
+
+--
+-- 資料表結構 `student`
+--
+
+CREATE TABLE `student` (
+  `student_ID` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+--
+-- 傾印資料表的資料 `student`
+--
+
+INSERT INTO `student` (`student_ID`, `name`) VALUES
+('01157006', 'popo'),
+('01157021', '祖靈');
+
 --
 -- 已傾印資料表的索引
 --
@@ -2246,6 +2392,30 @@ INSERT INTO `course` (`course_ID`, `course_name`, `dept_name`, `credit`, `requir
 --
 ALTER TABLE `course`
   ADD PRIMARY KEY (`course_ID`);
+
+--
+-- 資料表索引 `my_course`
+--
+ALTER TABLE `my_course`
+  ADD PRIMARY KEY (`student_ID`,`course_ID`),
+  ADD KEY `course_ID` (`course_ID`);
+
+--
+-- 資料表索引 `student`
+--
+ALTER TABLE `student`
+  ADD PRIMARY KEY (`student_ID`);
+
+--
+-- 已傾印資料表的限制式
+--
+
+--
+-- 資料表的限制式 `my_course`
+--
+ALTER TABLE `my_course`
+  ADD CONSTRAINT `my_course_ibfk_1` FOREIGN KEY (`student_ID`) REFERENCES `student` (`student_ID`),
+  ADD CONSTRAINT `my_course_ibfk_2` FOREIGN KEY (`course_ID`) REFERENCES `course` (`course_ID`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

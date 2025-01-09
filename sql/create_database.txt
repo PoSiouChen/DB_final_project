@@ -43,7 +43,7 @@ BEGIN
     WHERE course_ID = courseID;
 
     RETURN course_count > 0; -- 如果存在則回傳 TRUE，否則回傳 FALSE
-END
+END;
 
 Procedure========================================================
 
@@ -92,4 +92,4 @@ BEGIN
     FROM temp_courses;
 
     DROP TEMPORARY TABLE temp_courses;
-END
+END;
